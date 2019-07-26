@@ -1,4 +1,5 @@
-/*
+/* Based on weasel-pageant by Valtteri Vuorikoski
+ *
  * Pageant client code.
  * Copyright 2017  Valtteri Vuorikoski
  * Based on ssh-pageant, Copyright 2009, 2011  Josh Stone

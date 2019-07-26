@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.2)
 project(ssh-pageant-wrap)
 
 # path to real Git's ssh executable
@@ -14,6 +14,12 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE Ws2_32)
 target_compile_definitions(${PROJECT_NAME} PRIVATE "GIT_SSH_PATH=\"${GIT_SSH_PATH}\"")
+
+if(MINGW)
+    message(STATUS "Link with GCC's libraries statically")
+    target_link_libraries(${PROJECT_NAME} PRIVATE -static)
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug output is ON")
 else()
