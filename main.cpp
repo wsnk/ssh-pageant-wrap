@@ -12,7 +12,7 @@
 #include <Winbase.h>
 
 
-const char* const ssh = "C:/Program Files/Git/usr/bin/ssh.exe";
+const char* const ssh = GIT_SSH_PATH;
 
 
 int SendToAgent(char* buff, int len)
