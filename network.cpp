@@ -59,29 +59,39 @@ int RecvSaMessage(SOCKET sock, char* dst, unsigned len) {
 
 void ProcessClient(SOCKET sock, Network::Handler handler)
 {
-    unsigned counter = 0;
-    while (true) {
-        int len = counter > 1
-                ? RecvSaMessage(sock, buff, sizeof(buff))
-                : Recv(sock, buff, sizeof(buff));  // first 2 messages are not about ssh-agent protocol
+    try {
+        LOG_DEBUG("Processing SA connection started");
 
-        if (len == 0)
-            return;  // socket is closed by remote side
+        unsigned counter = 0;
+        while (true) {
+            LOG_DEBUG("Receive message from SA client...");
+            int len = counter > 1
+                    ? RecvSaMessage(sock, buff, sizeof(buff))
+                    : Recv(sock, buff, sizeof(buff));  // first 2 messages are not about SA
 
-        LOG_DEBUG("Request of " << len << " bytes:\n" << HexBuffer(buff, len));
-        if (counter > 1) {
-            len = handler(buff, len);
+            if (len == 0)
+                break;  // socket is closed by remote side
+
+            LOG_DEBUG("Received message of " << len << " bytes:\n" << HexBuffer(buff, len));
+            if (counter > 1) {
+                len = handler(buff, len);
+            }
+            send(sock, buff, len, 0);
+            ++counter;
+            LOG_DEBUG("Send response of " << len << " bytes:\n" << HexBuffer(buff, len) << "\n"
+                      "Message has been processed: " << counter);
         }
-        LOG_DEBUG("Response of " << len << " bytes:\n" << HexBuffer(buff, len));
 
-        send(sock, buff, len, 0);
-        ++counter;
+        LOG_DEBUG("Processing SA connection successfuly finished");
+    } catch (const std::exception& exc) {
+        LOG_ERROR("Processing SA connection failed: " << exc.what());
+    } catch (...) {
+        LOG_DEBUG("Processing SA connection failed: unknown exception");
     }
 
     shutdown(sock, SD_BOTH);
     closesocket(sock);
-
-    LOG_DEBUG("Socket closed");
+    LOG_DEBUG("SA connection closed");
 }
 
 void Run(SOCKET sock, Network::Handler handler, std::atomic_flag& runFlag)
@@ -105,8 +115,8 @@ void Run(SOCKET sock, Network::Handler handler, std::atomic_flag& runFlag)
 
             LOG_DEBUG("Socket accepted connection from " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port));
             try {
-                ProcessClient(remote_sock, handler);
-                LOG_DEBUG("Connection successfully handled and closed");
+                std::thread(&ProcessClient, remote_sock, handler).detach();
+                LOG_DEBUG("Connection will be processed in a detached thread");
             } catch (const std::exception& exc) {
                 LOG_ERROR("Error in processing connection: "  << exc.what());
             }

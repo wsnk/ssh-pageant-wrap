@@ -6,6 +6,7 @@ const char* const HexSymbols = "0123456789ABCDEF";
 
 }  // anoynmous namespace
 
+std::mutex _LogMutex;
 
 std::ostream& operator <<(std::ostream& os, HexBuffer buff) {
     for (size_t i = 0; i < buff.len; ++i) {
