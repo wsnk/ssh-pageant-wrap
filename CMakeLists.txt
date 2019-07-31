@@ -1,14 +1,19 @@
 cmake_minimum_required(VERSION 3.2)
 project(ssh-pageant-wrap)
 
+set(CMAKE_CXX_STANDARD 11)
+
 # path to real Git's ssh executable
 set(GIT_SSH_PATH "C:/Program Files/Git/usr/bin/ssh.exe")
 
 set(SOURCES
-    network.cpp
-    main.cpp
-    winpgntc.cpp
     common.cpp
+    common.h
+    main.cpp
+    network.cpp
+    network.h
+    pageant.cpp
+    pageant.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

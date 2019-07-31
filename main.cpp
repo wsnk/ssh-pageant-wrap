@@ -3,9 +3,10 @@
 #include <cstring>
 #include <iostream>
 #include <thread>
+#include <mutex>
 
 #include "network.h"
-#include "winpgntc.h"
+#include "pageant.h"
 #include "common.h"
 
 #include <Windows.h>
@@ -13,12 +14,17 @@
 
 
 const char* const ssh = GIT_SSH_PATH;
-
+Pageant pageant;
+std::mutex pageantMtx;
 
 int SendToAgent(char* buff, int len)
 {
-    agent_query(buff);
-    return msglen(buff);
+    Buffer msg(buff, len);
+    {
+        std::lock_guard<std::mutex> lock(pageantMtx);
+        pageant.Query(msg);
+    }
+    return msg.len;
 }
 
 int main(int argc, char* argv[])
