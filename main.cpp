@@ -71,16 +71,27 @@ int main(int argc, char* argv[])
                 return -1;
             }
 
-            LOG_DEBUG("Waiting for child process...");
-            WaitForSingleObject( pi.hProcess, INFINITE);
+            LOG_DEBUG("Child SSH-client process has started:\n  " << ssh << ' ' << commandLine
+                      << "\nPID=" << pi.dwProcessId);
+
+            WaitForSingleObject(pi.hProcess, INFINITE);
+
+            DWORD exitCode = 0;
+            if (!GetExitCodeProcess(pi.hProcess, &exitCode)) {
+                LOG_ERROR("Couldn't get exit code of child SSH-client process: " << GetLastError());
+                exitCode = -1;
+            }
 
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
+
+            return exitCode;
         }
         return GetLastError();
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
     }
+    return -1;
 }
 
 
